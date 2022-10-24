@@ -1,0 +1,6 @@
+-e file:#egg=ebmeta
+
+click
+setuptools
+EbookLib
+

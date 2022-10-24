@@ -1,0 +1,9 @@
+-c requirements.txt
+coverage
+pytest
+pytest-asyncio
+pytest-cov
+pytest-mypy
+pytest-pylint
+pytest-timeout
+pytest-xprocess
