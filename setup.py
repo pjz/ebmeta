@@ -1,4 +1,4 @@
-VERSION = '1.0.2'
+VERSION = '1.0.3'
 
 # bootstrap if we need to
 try:
@@ -38,7 +38,7 @@ req_packages = list(read_reqs("reqs/requirements.txt"))
 setup( author = 'Paul Jimenez'
      , author_email = 'pj@place.org'
      , classifiers = classifiers
-     , description = 'Ebook Metadata CLI' 
+     , description = 'Ebook Metadata Munging CLI' 
      , name = 'ebmeta'
      , url = 'http://github.com/pjz/ebmeta'
      , version = VERSION

@@ -142,12 +142,20 @@ git-release: wheel .version git-release-check not-dirty pylint
 	git merge main --ff-only &&\
 	git push && git checkout main
 	@echo "Released! Note you're now on the 'main' branch."
+	
+.PHONY: git-release-done-check
+git-release-done-check: .version
+	@VER=`cat .version` &&\
+	if [ `git rev-parse HEAD` != `git rev-parse $$VER` ]; then \
+		echo "You can only do a release from the main branch when it's the latest version.";\
+		exit 1;\
+	fi
 
 .PHONY: pypi-releasea
-pypi-release: .version
+pypi-release: .version git-release-done-check
 	rm dist/*
 	VER=`cat .version` &&\
-	git checkout $$VER
+	git checkout HEAD
 	python setup.py bdist_wheel
 	twine upload dist/*
 
