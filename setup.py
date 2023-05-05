@@ -1,4 +1,4 @@
-VERSION = '1.0.1'
+VERSION = '1.0.2'
 
 # bootstrap if we need to
 try:
@@ -10,7 +10,7 @@ except ImportError:
 from setuptools import setup, find_packages
 
 classifiers = [ 'Development Status :: 5 - Production/Stable'
-              , 'Environment :: WWW'
+              , 'Environment :: Console'
               , 'Intended Audience :: Developers'
               , 'Intended Audience :: System Administrators'
               , 'Natural Language :: English'

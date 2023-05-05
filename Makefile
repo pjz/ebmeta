@@ -139,7 +139,7 @@ git-release: wheel .version git-release-check not-dirty pylint
 	git tag $(SIGN) $$VER -m "Release v$$VER" &&\
 	git push --tags &&\
 	git checkout release &&\
-	git merge $$VER &&\
+	git merge main --ff-only &&\
 	git push && git checkout main
 	@echo "Released! Note you're now on the 'main' branch."
 
