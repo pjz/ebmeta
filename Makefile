@@ -17,6 +17,7 @@ default::
 	@echo "clean - remove all build artifacts"
 	@echo "veryclean - remove all build artifacts and nuke test containers"
 	@echo "git-release - tag a release and push it to github"
+	@echo "pypi-release - push the latest release to pypi"
 
 
 PYTEST_ARGS = --timeout=10 $(PYTEST_EXTRA)
@@ -121,8 +122,8 @@ SIGN=
 
 .PHONY: git-release-check
 git-release-check: .version
-	@if [ `git rev-parse --abbrev-ref HEAD` != master ]; then \
-		echo "You can only do a release from the master branch.";\
+	@if [ `git rev-parse --abbrev-ref HEAD` != main ]; then \
+		echo "You can only do a release from the main branch.";\
 		exit 1;\
 	fi
 	@if git tag | grep -q `cat .version` ; then \
@@ -139,8 +140,17 @@ git-release: wheel .version git-release-check not-dirty pylint
 	git push --tags &&\
 	git checkout release &&\
 	git merge $$VER &&\
-	git push && git checkout master
-	@echo "Released! Note you're now on the 'master' branch."
+	git push && git checkout main
+	@echo "Released! Note you're now on the 'main' branch."
+
+.PHONY: pypi-releasea
+pypi-release: .version
+	rm dist/*
+	VER=`cat .version` &&\
+	git checkout $$VER
+	python setup.py bdist_wheel
+	twine upload dist/*
+
 
 # contort a bit to get the version number
 .version: setup.py

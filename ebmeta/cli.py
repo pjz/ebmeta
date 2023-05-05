@@ -161,4 +161,4 @@ def set_series_index(filename, value):
 
 
 if __name__ == '__main__':
-    cli()
+    cli()  # pylint: disable=no-value-for-parameter
