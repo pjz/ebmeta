@@ -136,7 +136,7 @@ git-release-check: .version
 git-release: wheel .version git-release-check not-dirty pylint
 	VER=`cat .version` &&\
 	git push &&\
-	git tag $(SIGN) $$VER -m "Release v$$VER" &&\
+	git tag $(SIGN) $$VER &&\
 	git push --tags &&\
 	git checkout release &&\
 	git merge main --ff-only &&\

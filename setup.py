@@ -1,4 +1,4 @@
-VERSION = '1.0.3'
+VERSION = '1.0.4'
 
 # bootstrap if we need to
 try:
