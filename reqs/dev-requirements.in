@@ -7,3 +7,4 @@ pytest-mypy
 pytest-pylint
 pytest-timeout
 pytest-xprocess
+twine
