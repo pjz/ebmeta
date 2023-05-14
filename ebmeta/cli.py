@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 import tempfile
+import zipfile
 
 import click
 from ebooklib import epub
@@ -38,7 +39,12 @@ def cli(debug, debugall):
 def get(filename, keys):
     '''get the value of one key'''
 
-    book = epub.read_epub(filename)
+    try:
+        book = epub.read_epub(filename)
+    except (epub.EpubException, zipfile.BadZipFile) as e:
+        logger.debug(f'Cannot open {filename}', exc_info=e)
+        return 1
+
     logger.debug(f'Book {filename} {book.metadata!r}')
 
     if not keys:
@@ -62,7 +68,7 @@ def show_one_key(filename, book, key, ns, k):
         value = book.get_metadata(ns, k)
     except KeyError as e:
         value = 'Key Not Found'
-        logger.exception(e)
+        logger.debug(e, exc_info=e)
     print(f'{filename} {key} {value}')
 
 
