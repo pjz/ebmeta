@@ -4,19 +4,8 @@ import logging
 import click
 from ebooklib import epub
 
+from . import logger
 from .model import MyBook
-
-logger = logging.getLogger(__name__)
-
-
-def stderr_handler():
-    handler = logging.StreamHandler(stream=sys.stderr)
-    formatter = logging.Formatter(fmt='%(asctime)s %(name)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-    handler.setFormatter(formatter)
-    return handler
-
-
-logger.addHandler(stderr_handler())
 
 
 @click.group()
@@ -61,13 +50,12 @@ def ls(filename):
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
 @click.argument('key')
 @click.argument('value')
-def rawset(filename, key, value):
+def set_any(filename, key, value):
     '''set the value of one key
 
        KEY is of the form NAMESPACE:FIELD
        VALUE is eval'd by python
     '''
-
     val = eval(value)
 
     MyBook.set_and_save(filename, key, val)
@@ -76,6 +64,7 @@ def rawset(filename, key, value):
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
 def get_series(filename):
+    '''show the series'''
     MyBook.show_one_book_key(filename, 'calibre:series')
 
 
@@ -83,6 +72,7 @@ def get_series(filename):
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
 @click.argument('value')
 def set_series(filename, value):
+    '''set the series'''
     key = 'calibre:series'
     val = [(None, {'name': key, 'content': str(value)})]
 
@@ -93,13 +83,19 @@ def set_series(filename, value):
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
 @click.argument('value', type=click.FLOAT)
 def set_series_index(filename, value):
+    '''set the series index'''
     key = 'calibre:series_index'
     val = [(None, {'name': key, 'content': str(value)})]
 
     MyBook.set_and_save(filename, key, val)
 
 
+def cli_wrapper():
+    try:
+        return cli()  # pylint: disable=no-value-for-parameter
+    except Exception as e:
+        logging.debug("Crash! when called with args %r :", sys.argv, exc_info=e)
 
 
 if __name__ == '__main__':
-    cli()  # pylint: disable=no-value-for-parameter
+    cli_wrapper()

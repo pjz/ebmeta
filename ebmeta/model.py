@@ -6,6 +6,7 @@ import tempfile
 from typing import NamedTuple, List
 
 from ebooklib import epub
+from lxml.etree import XMLSyntaxError
 
 logger = logging.getLogger(__name__)
 
@@ -45,14 +46,21 @@ class MyBook:
         '''
         Open the file successfully as an epub, or exit
         '''
+        err = None
         try:
             return cls(filename)
         except (epub.EpubException, zipfile.BadZipFile) as e:
-            logger.debug(f'Cannot open {filename}', exc_info=e)
-            if exitmsg is None:
-                exitmsg = f'Cannot open {filename}. Exiting.'
-            print(exitmsg)
-            sys.exit(exitcode)
+            msg, err = f'Cannot open {filename}', e
+        except XMLSyntaxError as e:
+            msg, err = f'{filename} has malformed XML', e
+
+        # success returned from inside the try:, so this is only on exceptions
+
+        logger.debug('%s: ', msg, exc_info=err)
+        if exitmsg is None:
+            exitmsg = f'{msg}. Exiting.'
+        print(exitmsg)
+        sys.exit(exitcode)
 
     @classmethod
     def show_one_book_key(cls, filename: str, key: str, ns: str = None, k: str = None) -> "MyBook":

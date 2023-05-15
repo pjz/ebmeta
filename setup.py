@@ -43,7 +43,7 @@ setup( author = 'Paul Jimenez'
      , url = 'http://github.com/pjz/ebmeta'
      , version = VERSION
      , packages = find_packages()
-     , entry_points = { 'console_scripts': ['ebmeta = ebmeta.cli:cli' ] }
+     , entry_points = { 'console_scripts': ['ebmeta = ebmeta.cli:cli_wrapper' ] }
      , install_requires = req_packages
      , extras_require = { 'dev': req_dev_packages }
      , setup_requires = [ "wheel" ]
