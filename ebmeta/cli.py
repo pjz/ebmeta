@@ -1,15 +1,13 @@
-import os
 import sys
 import logging
-import tempfile
-import zipfile
 
 import click
 from ebooklib import epub
 
-REVNAMESPACE = { url:ns for ns, url in epub.NAMESPACES.items() }
+from .model import MyBook
 
 logger = logging.getLogger(__name__)
+
 
 def stderr_handler():
     handler = logging.StreamHandler(stream=sys.stderr)
@@ -17,7 +15,9 @@ def stderr_handler():
     handler.setFormatter(formatter)
     return handler
 
+
 logger.addHandler(stderr_handler())
+
 
 @click.group()
 @click.option('--debug', is_flag=True, default=False, help='enable debug output for ebmeta')
@@ -29,87 +29,32 @@ def cli(debug, debugall):
         logging.getLogger('').setLevel(logging.DEBUG)
 
 
-
-
-
-
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
 @click.argument('keys', nargs=-1)
 def get(filename, keys):
-    '''get the value of one key'''
-
-    try:
-        book = epub.read_epub(filename)
-    except (epub.EpubException, zipfile.BadZipFile) as e:
-        logger.debug(f'Cannot open {filename}', exc_info=e)
-        return 1
-
-    logger.debug(f'Book {filename} {book.metadata!r}')
+    '''
+    get the value of the specified key, or all keys if unspecified
+    '''
+    book = MyBook.orExit(filename)
 
     if not keys:
-        keys = []
-        for url, kv in book.metadata.items():
-            ns = REVNAMESPACE.get(url, url)
-            for k in kv:
-                keys.append(f'{ns}:{k}')
+        keys = book.all_meta_keys()
 
     for key in keys:
-        if ':' in key:
-            ns, k = key.rsplit(':', 1)
-        else:
-            ns, k = None, key
+        book.show_key(key)
 
-        show_one_key(filename, book, key, ns, k)
-
-
-def show_one_key(filename, book, key, ns, k):
-    try:
-        value = book.get_metadata(ns, k)
-    except KeyError as e:
-        value = 'Key Not Found'
-        logger.debug(e, exc_info=e)
-    print(f'{filename} {key} {value}')
-
-
-def show_one_book_key(filename, key, ns, k):
-    book = epub.read_epub(filename)
-    show_one_key(filename, book, key, ns, k)
-    
 
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
 def ls(filename):
+    '''
+    List interior files of the specified epub
+    '''
+    book = MyBook.orExit(filename)
 
-    book = epub.read_epub(filename)
-    for item in book.get_items():
+    for item in book.book.get_items():
         print(f'{filename} {item.get_name()} {item.media_type}')
-
-
-def set_raw_bookmeta(book, ns, k, val):
-    book.metadata[ns] = book.metadata.get(ns, {})
-    book.metadata[ns][k] = val
-
-
-def update_book(filename, book):
-    tempfh = tempfile.NamedTemporaryFile()
-    tempname = tempfh.name
-    tempfh.close()
-
-    epub.write_epub(tempname, book)
-    try:
-        os.rename(tempname, filename)
-    except PermissionError:
-        print(f"PermissionError: can't write to {filename}")
-
-
-def update_book_metadata(filename, ns, k, val):
-    book = epub.read_epub(filename)
-    set_raw_bookmeta(book, ns, k, val)
-    update_book(filename, book)
-
-
-
 
 
 @cli.command()
@@ -123,45 +68,35 @@ def rawset(filename, key, value):
        VALUE is eval'd by python
     '''
 
-    if ':' in key:
-        ns, k = key.split(':', 1)
-    else:
-        ns, k = None, key
-
-    ns = epub.NAMESPACES.get(ns, ns)
     val = eval(value)
-    
-    update_book_metadata(filename, ns, k, val)
 
+    MyBook.set_and_save(filename, key, val)
 
 
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
 def get_series(filename):
-    ns, k = 'calibre', 'series'
-    show_one_book_key(filename, k, ns, k)
+    MyBook.show_one_book_key(filename, 'calibre:series')
 
 
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
 @click.argument('value')
 def set_series(filename, value):
-    ns, k = 'calibre', 'series'
-    val = [(None, {'name': f'{ns}:{k}', 'content': str(value)})]
+    key = 'calibre:series'
+    val = [(None, {'name': key, 'content': str(value)})]
 
-    update_book_metadata(filename, ns, k, val)
+    MyBook.set_and_save(filename, key, val)
 
 
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
 @click.argument('value', type=click.FLOAT)
 def set_series_index(filename, value):
-    ns, k = 'calibre', 'series_index'
-    val = [(None, {'name': f'{ns}:{k}', 'content': str(value)})]
+    key = 'calibre:series_index'
+    val = [(None, {'name': key, 'content': str(value)})]
 
-    update_book_metadata(filename, ns, k, val)
-
-
+    MyBook.set_and_save(filename, key, val)
 
 
 
