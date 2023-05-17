@@ -3,12 +3,14 @@ import sys
 import logging
 import zipfile
 import tempfile
-from typing import NamedTuple, List
+from typing import NamedTuple, List, Optional
 
 from ebooklib import epub
 from lxml.etree import XMLSyntaxError
 
 logger = logging.getLogger(__name__)
+
+epub.NAMESPACES['calibre'] = 'http://calibre.kovidgoyal.net/2009/metadata'
 
 REVNAMESPACE = {url: ns for ns, url in epub.NAMESPACES.items()}
 
@@ -17,17 +19,17 @@ class NSKey(NamedTuple):
     ns: str
     key: str
 
+    @property
+    def url(self) -> str:
+        return epub.NAMESPACES.get(self.ns, self.ns)
+
     @classmethod
-    def fromKey(cls, key: str):
+    def fromKey(cls, key: str) -> "NSKey":
         '''normalize a key into an NSKey'''
         if ':' in key:
             return cls(*key.rsplit(':', 1))
         else:
             return cls(None, key)
-
-    def asKey(self):
-        ns: str = '' if self.ns is None else epub.NAMESPACES.get(self.ns, self.ns)
-        return f'{ns}:{self.key}'
 
 
 class MyBook:
@@ -50,7 +52,7 @@ class MyBook:
         try:
             return cls(filename)
         except (epub.EpubException, zipfile.BadZipFile) as e:
-            msg, err = f'Cannot open {filename}', e
+            msg, err = f'Cannot open {filename}: {e!s}', e
         except XMLSyntaxError as e:
             msg, err = f'{filename} has malformed XML', e
 
@@ -79,9 +81,9 @@ class MyBook:
         except PermissionError:
             print(f"PermissionError: can't write to {self.filename}")
 
-    def rawset_meta(self, ns: str, k: str, val) -> None:
-        self.book.metadata[ns] = self.book.metadata.get(ns, {})
-        self.book.metadata[ns][k] = val
+    def rawset_meta(self, ns_url: str, k: str, val) -> None:
+        self.book.metadata[ns_url] = self.book.metadata.get(ns_url, {})
+        self.book.metadata[ns_url][k] = val
 
     @classmethod
     def rawset_and_save(cls, filename: str, ns: str, k: str, val) -> None:
@@ -93,7 +95,7 @@ class MyBook:
     def set_and_save(cls, filename: str, key: str, val) -> None:
         book = cls.orExit(filename)
         nsk = NSKey.fromKey(key)
-        book.rawset_meta(nsk.ns, nsk.key, val)
+        book.rawset_meta(nsk.url, nsk.key, val)
         book.save()
 
     def all_meta_keys(self) -> List[str]:

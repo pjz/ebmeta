@@ -1,4 +1,5 @@
 import sys
+import json
 import logging
 
 import click
@@ -45,6 +46,16 @@ def ls(filename):
     for item in book.book.get_items():
         print(f'{filename} {item.get_name()} {item.media_type}')
 
+@cli.command()
+@click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
+def metadata(filename):
+    '''
+    List metadata of the specified epub
+    '''
+
+    book = MyBook.orExit(filename)
+    print(json.dumps(book.metadata, sort_keys=True, indent=4))
+
 
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
@@ -73,21 +84,25 @@ def get_series(filename):
 @click.argument('value')
 def set_series(filename, value):
     '''set the series'''
-    key = 'calibre:series'
-    val = [(None, {'name': key, 'content': str(value)})]
-
-    MyBook.set_and_save(filename, key, val)
-
+    book = MyBook.orExit(filename)
+    book.book.set_unique_metadata('calibre', 'series', str(value))
+    book.save()
 
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
 @click.argument('value', type=click.FLOAT)
 def set_series_index(filename, value):
     '''set the series index'''
-    key = 'calibre:series_index'
-    val = [(None, {'name': key, 'content': str(value)})]
+    book = MyBook.orExit(filename)
+    book.book.set_unique_metadata('calibre', 'series_index', str(value))
+    book.save()
 
-    MyBook.set_and_save(filename, key, val)
+
+@cli.command()
+@click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
+def rewrite(filename):
+    '''load and save the book in order to upgrade the metadata to EPUB3'''
+    MyBook(filename).save()
 
 
 def cli_wrapper():
