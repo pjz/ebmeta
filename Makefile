@@ -26,7 +26,7 @@ PIP_VENDORED_DIR=vendor/wheel
 PREREQS=setuptools
 DEVREQS=reqs/dev-requirements.txt
 REQS=reqs/requirements.txt
-DEV_ENV=.pip_syncd
+DEV_ENV=.make.dev
 
 ifdef PIP_VENDORED_DIR
 PIP_VENDORED_FLAGS += -f $(PIP_VENDORED_DIR)
@@ -45,7 +45,7 @@ $(DEV_ENV): $(PIP_COMPILE)
 $(PYTEST): $(DEV_ENV)
 
 .PHONY: dev
-dev: $(DEV_ENV)
+dev: $(PYTEST)
 
 .PHONY: nuke-stamp
 nuke-stamp:

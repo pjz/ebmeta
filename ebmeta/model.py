@@ -6,7 +6,7 @@ import tempfile
 from typing import NamedTuple, List, Optional
 
 from ebooklib import epub
-from lxml.etree import XMLSyntaxError
+from lxml import etree
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ REVNAMESPACE = {url: ns for ns, url in epub.NAMESPACES.items()}
 
 
 class NSKey(NamedTuple):
-    ns: str
+    ns: Optional[str]
     key: str
 
     @property
@@ -53,7 +53,7 @@ class MyBook:
             return cls(filename)
         except (epub.EpubException, zipfile.BadZipFile) as e:
             msg, err = f'Cannot open {filename}: {e!s}', e
-        except XMLSyntaxError as e:
+        except etree.XMLSyntaxError as e:
             msg, err = f'{filename} has malformed XML', e
 
         # success returned from inside the try:, so this is only on exceptions

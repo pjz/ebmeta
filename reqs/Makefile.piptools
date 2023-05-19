@@ -1,7 +1,7 @@
 default::
 	@echo "update-deps - rebuild package dependencies"
 
-PIP_COMPILE_FLAGS := --quiet --annotate $(PIP_VENDORED_FLAGS)
+PIP_COMPILE_FLAGS := --quiet --annotate --resolver=backtracking $(PIP_VENDORED_FLAGS)
 
 DEPS=reqs/dev-requirements.txt reqs/requirements.txt reqs/jupyter-requirements.txt
 
