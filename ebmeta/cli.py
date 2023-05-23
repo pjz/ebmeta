@@ -43,8 +43,15 @@ def ls(filename):
     '''
     book = MyBook.orExit(filename)
 
-    for item in book.book.get_items():
-        print(f'{filename} {item.get_name()} {item.media_type}')
+    items = list(book.book.get_items())
+
+    max_media_type_len = 0
+    for item in items:
+        max_media_type_len = max(max_media_type_len, len(item.media_type))
+
+    for item in sorted(items, key=lambda i: i.get_name()):
+        print(f'{filename} {item.media_type:<{max_media_type_len}} {item.get_name()}')
+
 
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False), required=True, nargs=1)
@@ -110,6 +117,7 @@ def cli_wrapper():
         return cli()  # pylint: disable=no-value-for-parameter
     except Exception as e:
         logging.debug("Crash! when called with args %r :", sys.argv, exc_info=e)
+        print("Exception thrown.  Re-run with --debugall for details")
 
 
 if __name__ == '__main__':
