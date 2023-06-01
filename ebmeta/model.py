@@ -15,6 +15,11 @@ epub.NAMESPACES['calibre'] = 'http://calibre.kovidgoyal.net/2009/metadata'
 REVNAMESPACE = {url: ns for ns, url in epub.NAMESPACES.items()}
 
 
+def get_temporary_filename() -> str:
+    with tempfile.NamedTemporaryFile() as tempfh:
+        return tempfh.name
+
+
 class NSKey(NamedTuple):
     ns: Optional[str]
     key: str
@@ -26,10 +31,10 @@ class NSKey(NamedTuple):
     @classmethod
     def fromKey(cls, key: str) -> "NSKey":
         '''normalize a key into an NSKey'''
+        ns = None
         if ':' in key:
-            return cls(*key.rsplit(':', 1))
-        else:
-            return cls(None, key)
+            ns, key = key.rsplit(':', 1)
+        return cls(ns, key)
 
 
 class MyBook:
@@ -71,10 +76,7 @@ class MyBook:
         return book
 
     def save(self) -> None:
-        tempfh = tempfile.NamedTemporaryFile()
-        tempname = tempfh.name
-        tempfh.close()
-
+        tempname = get_temporary_filename()
         epub.write_epub(tempname, self.book)
         try:
             os.rename(tempname, self.filename)
@@ -117,3 +119,13 @@ class MyBook:
             value = '<Key Not Found>'
             logger.debug("File: %s has no key %s:%s - ", self.filename, nsk.ns, nsk.key, exc_info=e)
         print(f'{self.filename} {key} {value}')
+
+    def item_named(self, name: str):
+        for item in self.book.get_items():
+            if name == item.get_name():
+                return item
+        return None
+
+    def set_cover_id(self, cover_id):
+        self.book.add_metadata(None, 'meta', '', {'name': 'cover', 'content': cover_id})
+
